@@ -148,25 +148,8 @@ class Defender {
         } else {
             this.timer = 0;
         }
-
-        
     }
 }
-
-canvas.addEventListener('click', function(){
-    const gridPositionX = mouse.x - (mouse.x % cellSize) + cellGap;
-    const gridPositionY = mouse.y - (mouse.y % cellSize) + cellGap;
-    if (gridPositionY < cellSize) return;
-    for (let i = 0; i < defenders.length; i++) {
-        if (defenders[i].x === gridPositionX && defenders[i].y === gridPositionY)
-        return;
-    }
-    let defenderCost = 100;
-    if (numberOfResources >= defenderCost) {
-        defenders.push(new Defender(gridPositionX, gridPositionY));
-        numberOfResources -= defenderCost;
-    }
-});
 
 function handleDefenders(){
     for (let i = 0; i < defenders.length; i++) {
@@ -188,6 +171,44 @@ function handleDefenders(){
                 enemies[j].movement = enemies[j].speed;
             }
         }
+    }
+}
+
+// floating messages
+const floatingMessages = [];
+class floatingMessage {
+    constructor(value, x, y, size, color){
+        this.value = value;
+        this.x = x;
+        this.y = y;
+        this.size = size;
+        this.lifeSpan = 0;
+        this.color = color;
+        this.opacity = 1;
+    }
+    update(){
+        this.y -= 0.3;
+        this.lifeSpan += 1;
+        if (this.opacity > 0.03) this.opacity -= 0.03;
+    }
+    draw(){
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle = this.color;
+        ctx.font = this.size + "px Orbitron";
+        ctx.fillText(this.value, this.x, this.y);
+        ctx.globalAlpha = 1;
+    }
+}
+
+function handleFloatingMessages(){
+    for (let i = 0; i < floatingMessages.length; i++) {
+        floatingMessages[i].update();
+        floatingMessages[i].draw();
+        if (floatingMessages[i].lifeSpan >= 50) {
+            floatingMessages.splice(i, 1);
+            i--;
+        }
+        // console.log(floatingMessages[i].lifeSpan);
     }
 }
 
@@ -224,6 +245,8 @@ function handleEnemies(){
         }
         if (enemies[i].health <= 0) {
             let gainedResources = enemies[i].maxHealth / 10;
+            floatingMessages.push(new floatingMessage('+' + gainedResources, enemies[i].x, enemies[i].y, 30, 'black'))
+            floatingMessages.push(new floatingMessage('+' + gainedResources, 250, 50, 30, 'gold'))
             numberOfResources += gainedResources;
             score += gainedResources;
             const findThisIndex = enemyPositions.indexOf(enemies[i].y);
@@ -270,6 +293,8 @@ function handleResources(){
         resources[i].draw();
         if (resources[i] && mouse.x && mouse.y && collision(resources[i], mouse)){
             numberOfResources += resources[i].amount;
+            floatingMessages.push(new floatingMessage('+' + resources[i].amount, resources[i].x, resources[i].y, 30, 'black'))
+            floatingMessages.push(new floatingMessage('+' + resources[i].amount, 250, 50, 30, 'gold'))
             resources.splice(i, 1);
             i--;
         }
@@ -297,6 +322,23 @@ function handleGameStatus(){
     }
 }
 
+canvas.addEventListener('click', function(){
+    const gridPositionX = mouse.x - (mouse.x % cellSize) + cellGap;
+    const gridPositionY = mouse.y - (mouse.y % cellSize) + cellGap;
+    if (gridPositionY < cellSize) return;
+    for (let i = 0; i < defenders.length; i++) {
+        if (defenders[i].x === gridPositionX && defenders[i].y === gridPositionY)
+        return;
+    }
+    let defenderCost = 100;
+    if (numberOfResources >= defenderCost) {
+        defenders.push(new Defender(gridPositionX, gridPositionY));
+        numberOfResources -= defenderCost;
+    } else {
+        floatingMessages.push(new floatingMessage('need more resources', mouse.x, mouse.y, 20, 'blue'));
+    }
+});
+
 function animate(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = 'blue';
@@ -307,6 +349,7 @@ function animate(){
     handleProjectiles();
     handleEnemies();
     handleGameStatus();
+    handleFloatingMessages();
     frame++;
     // console.log(frame);
     if (!gameOver) requestAnimationFrame(animate); // recursion
