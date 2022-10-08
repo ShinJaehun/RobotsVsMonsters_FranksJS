@@ -121,6 +121,10 @@ function handleProjectiles(){
 }
 
 // defenders
+const defender1 = new Image();
+defender1.src = 'plant.png';
+
+
 class Defender {
     constructor(x, y) {
         this.x = x;
@@ -128,9 +132,16 @@ class Defender {
         this.width = cellSize - cellGap * 2;
         this.height = cellSize - cellGap * 2;
         this.shooting = false;
+        this.shootNow = false; // defender의 frame이 여럿이면 쓸만한 기능인디...
         this.health = 100;
         this.projectiles = [];
         this.timer = 0;
+        this.frameX = 0;
+        this.frameY = 0;
+        this.spriteWidth = 167;
+        this.spriteHeight = 243;
+        this.minFrame = 0;
+        this.maxFrame = 1;
     }
     draw() {
         ctx.fillStyle = 'blue';
@@ -138,8 +149,43 @@ class Defender {
         ctx.fillStyle = 'gold';
         ctx.font = '30px Orbitron';
         ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 25);
+        // ctx.drawImage(defender1, sx, sy, sw, sh, dx, dy, dw, dh);
+        ctx.drawImage(defender1, 
+            this.frameX * this.spriteWidth,
+            0,
+            this.spriteWidth,
+            this.spriteHeight,
+            this.x,
+            this.y,
+            this.width,
+            this.height);
     }
     update(){
+        // frame이 많을 때 15번에서 슈팅이 활성화됨
+        // if (frame % 10 === 0) {
+        //     if (this.frameX < this.maxFrame) this.frameX++;
+        //     else this.frameX = this.minFrame;
+        //     if (this.frameX === 15) this.shootNow = true;
+        // }
+        // 파일 이름 등으로 sprite animation을 결정하는 것도 좋지만
+        // 이렇게 하나의 sprite animation에 모두 등록해 놓고 필요한 sprite만 갖다 쓰는 것도 나쁘지 않군!
+        // if (this.shooting) {
+        //     this.minFrame = 0;
+        //     this.maxFrame = 15;
+        // } else {
+        //     this.minFrame = 17;
+        //     this.maxFrame = 23;
+        // }
+        // if (this.shooting && this.shootNow) {
+        //     projectiles.push(new Projectiles(this.x + 70, this.y + 50));
+        //     this.shootNow = false;
+        // }
+
+        if (frame % 10 === 0) {
+            if (this.frameX < this.maxFrame) this.frameX++;
+            else this.frameX = this.minFrame;
+        }
+
         if (this.shooting) {
             this.timer++;
             if (this.timer % 100 == 0) {
@@ -213,6 +259,15 @@ function handleFloatingMessages(){
 }
 
 // enemies
+
+const enemyTypes = [];
+const enemy1 = new Image();
+enemy1.src = 'zombie.png';
+enemyTypes.push(enemy1);
+const enemy2 = new Image();
+enemy2.src = 'zombie2.png'
+enemyTypes.push(enemy2);
+
 class Enemy {
     constructor(verticalPosition) {
         this.x = canvas.width;
@@ -223,16 +278,37 @@ class Enemy {
         this.movement = this.speed;
         this.health = 100;
         this.maxHealth = this.health;
+        this.enemyType = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+        this.frameX = 0;
+        this.frameY = 0;
+        this.minFrame = 0;
+        this.maxFrame = 7;
+        this.spriteWidth = 292;
+        this.spriteHeight = 410;
     }
     update() {
         this.x -= this.movement;
+        if (frame % 10 === 0) {
+            if (this.frameX < this.maxFrame) this.frameX++;
+            else this.frameX = this.minFrame;
+        }
     }
     draw() {
-        ctx.fillStyle = 'red';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        // ctx.fillStyle = 'red';
+        // ctx.fillRect(this.x, this.y, this.width, this.height);
         ctx.fillStyle = 'black';
         ctx.font = '30px Orbitron';
-        ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 25);
+        ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 30);
+        // ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+        ctx.drawImage(this.enemyType, 
+            this.frameX * this.spriteWidth,
+            0,
+            this.spriteWidth,
+            this.spriteHeight,
+            this.x,
+            this.y,
+            this.width,
+            this.height);
     }
 }
 
