@@ -12,6 +12,7 @@ let frame = 0;
 let gameOver = false;
 let score = 0;
 const winningScore = 50;
+let chosenDefender = 1;
 
 const gameGrid = [];
 const defenders = [];
@@ -25,7 +26,15 @@ const mouse = {
     y: 10,
     width: 0.1,
     height: 0.1,
+    clicked: false
 }
+
+canvas.addEventListener('mousedown', function(){
+    mouse.clicked = true;
+})
+canvas.addEventListener('mouseup', function(){
+    mouse.clicked = false;
+})
 
 let canvasPosition = canvas.getBoundingClientRect()
 // console.log(canvasPosition);
@@ -123,6 +132,8 @@ function handleProjectiles(){
 // defenders
 const defender1 = new Image();
 defender1.src = 'plant.png';
+const defender2 = new Image();
+defender2.src = 'plant2.png';
 
 
 class Defender {
@@ -142,23 +153,38 @@ class Defender {
         this.spriteHeight = 243;
         this.minFrame = 0;
         this.maxFrame = 1;
+        this.chosenDefender = chosenDefender;
     }
     draw() {
-        ctx.fillStyle = 'blue';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-        ctx.fillStyle = 'gold';
+        // ctx.fillStyle = 'blue';
+        // ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.fillStyle = 'black';
         ctx.font = '30px Orbitron';
-        ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 25);
+        ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 20);
+
+        if (this.chosenDefender === 1) {
+            ctx.drawImage(defender1, 
+                this.frameX * this.spriteWidth,
+                0,
+                this.spriteWidth,
+                this.spriteHeight,
+                this.x + 10,
+                this.y + 25,
+                this.width * 0.7,
+                this.height * 0.7);
+        } else if (this.chosenDefender === 2) {
+            ctx.drawImage(defender2, 
+                this.frameX * this.spriteWidth,
+                0,
+                this.spriteWidth,
+                this.spriteHeight,
+                this.x + 10,
+                this.y + 25,
+                this.width * 0.7,
+                this.height * 0.7);
+        }
+
         // ctx.drawImage(defender1, sx, sy, sw, sh, dx, dy, dw, dh);
-        ctx.drawImage(defender1, 
-            this.frameX * this.spriteWidth,
-            0,
-            this.spriteWidth,
-            this.spriteHeight,
-            this.x,
-            this.y,
-            this.width,
-            this.height);
     }
     update(){
         // frame이 많을 때 15번에서 슈팅이 활성화됨
@@ -169,12 +195,23 @@ class Defender {
         // }
         // 파일 이름 등으로 sprite animation을 결정하는 것도 좋지만
         // 이렇게 하나의 sprite animation에 모두 등록해 놓고 필요한 sprite만 갖다 쓰는 것도 나쁘지 않군!
-        // if (this.shooting) {
-        //     this.minFrame = 0;
-        //     this.maxFrame = 15;
-        // } else {
-        //     this.minFrame = 17;
-        //     this.maxFrame = 23;
+        // defender 종류가 여럿이고 각 defender에서 shooting animation frame이 다 다를때
+        // if (this.chosenDefender === 1) {
+        //     if (this.shooting) {
+        //         this.minFrame = 0;
+        //         this.maxFrame = 16;
+        //     } else {
+        //         this.minFrame = 17;
+        //         this.maxFrame = 24;
+        //     }
+        // } else if (this.chosenDefender === 2) {
+        //     if (this.shooting) {
+        //         this.minFrame = 13;
+        //         this.maxFrame = 28;
+        //     } else {
+        //         this.minFrame = 0;
+        //         this.maxFrame = 12;
+        //     }
         // }
         // if (this.shooting && this.shootNow) {
         //     projectiles.push(new Projectiles(this.x + 70, this.y + 50));
@@ -220,6 +257,55 @@ function handleDefenders(){
     }
 }
 
+const card1 = {
+    x: 10,
+    y: 10,
+    width: 70,
+    height: 85
+}
+
+const card2 = {
+    x: 90,
+    y: 10,
+    width: 70,
+    height: 85
+}
+
+function chooseDefender(){
+    let card1stroke = 'black';
+    let card2stroke = 'black';
+
+    if (collision(mouse, card1) && mouse.clicked) {
+        chosenDefender = 1;
+    } else if (collision(mouse, card2)) {
+        chosenDefender = 2;
+    }
+
+    if (chosenDefender === 1) {
+        card1stroke = 'gold';
+        card2stroke = 'black';
+    } else if (chosenDefender === 2) {
+        card1stroke = 'black';
+        card2stroke = 'gold';
+    } else {
+        card1stroke = 'black';
+        card2stroke = 'black';
+
+    }
+
+    ctx.lineWidth = 1;
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.fillRect(card1.x, card1.y, card1.width, card1.height);
+    ctx.strokeStyle = card1stroke;
+    ctx.strokeRect(card1.x, card1.y, card1.width, card1.height);
+    // ctx.drawImage(defender1, sx, sy, sw, sh, dx, dy, dw, dh);
+    ctx.drawImage(defender1, 0, 0, 167, 243, 15, 10, 167/3, 243/3);
+    ctx.fillRect(card2.x, card2.y, card2.width, card2.height);
+    ctx.strokeStyle = card2stroke;
+    ctx.strokeRect(card2.x, card2.y, card2.width, card2.height);
+    ctx.drawImage(defender2, 0, 0, 167, 243, 95, 10, 167/3, 243/3);
+}
+
 // floating messages
 const floatingMessages = [];
 class floatingMessage {
@@ -259,7 +345,6 @@ function handleFloatingMessages(){
 }
 
 // enemies
-
 const enemyTypes = [];
 const enemy1 = new Image();
 enemy1.src = 'zombie.png';
@@ -283,6 +368,14 @@ class Enemy {
         this.frameY = 0;
         this.minFrame = 0;
         this.maxFrame = 7;
+
+        // enemyType에 따라 프레임 수가 다를때 처리하는 방법
+        // if (this.enemyType === enemy1) {
+        //     this.maxFrame = 4;
+        // } else if (this.enemyType === enemy2) {
+        //     this.maxFrame = 7;
+        // }
+        
         this.spriteWidth = 292;
         this.spriteHeight = 410;
     }
@@ -298,17 +391,17 @@ class Enemy {
         // ctx.fillRect(this.x, this.y, this.width, this.height);
         ctx.fillStyle = 'black';
         ctx.font = '30px Orbitron';
-        ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 30);
+        ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 20);
         // ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
         ctx.drawImage(this.enemyType, 
             this.frameX * this.spriteWidth,
             0,
             this.spriteWidth,
             this.spriteHeight,
-            this.x,
-            this.y,
-            this.width,
-            this.height);
+            this.x + 10,
+            this.y + 20,
+            this.width * 0.8,
+            this.height * 0.8);
     }
 }
 
@@ -322,7 +415,7 @@ function handleEnemies(){
         if (enemies[i].health <= 0) {
             let gainedResources = enemies[i].maxHealth / 10;
             floatingMessages.push(new floatingMessage('+' + gainedResources, enemies[i].x, enemies[i].y, 30, 'black'))
-            floatingMessages.push(new floatingMessage('+' + gainedResources, 250, 50, 30, 'gold'))
+            floatingMessages.push(new floatingMessage('+' + gainedResources, 470, 85, 30, 'gold'))
             numberOfResources += gainedResources;
             score += gainedResources;
             const findThisIndex = enemyPositions.indexOf(enemies[i].y);
@@ -370,7 +463,7 @@ function handleResources(){
         if (resources[i] && mouse.x && mouse.y && collision(resources[i], mouse)){
             numberOfResources += resources[i].amount;
             floatingMessages.push(new floatingMessage('+' + resources[i].amount, resources[i].x, resources[i].y, 30, 'black'))
-            floatingMessages.push(new floatingMessage('+' + resources[i].amount, 250, 50, 30, 'gold'))
+            floatingMessages.push(new floatingMessage('+' + resources[i].amount, 470, 85, 30, 'gold'))
             resources.splice(i, 1);
             i--;
         }
@@ -381,8 +474,8 @@ function handleResources(){
 function handleGameStatus(){
     ctx.fillStyle = 'gold';
     ctx.font = '30px Orbitron';
-    ctx.fillText('Score: ' + score, 20, 40);
-    ctx.fillText('Resources: ' + numberOfResources, 20, 80);
+    ctx.fillText('Score: ' + score, 180, 40);
+    ctx.fillText('Resources: ' + numberOfResources, 180, 80);
     if (gameOver) {
         ctx.fillStyle = 'black';
         ctx.font = '90px Orbitron';
@@ -424,6 +517,7 @@ function animate(){
     handleResources();
     handleProjectiles();
     handleEnemies();
+    chooseDefender();
     handleGameStatus();
     handleFloatingMessages();
     frame++;
